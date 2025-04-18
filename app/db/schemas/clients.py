@@ -38,3 +38,22 @@ class ClientSchema(BaseModel):
         if not is_valid_cpf(v):
             raise ValueError("Invalid CPF")
         return v
+
+
+class ClientOut(BaseModel):
+    id: int
+    firebaseIdWhoCreated: str
+    name: str
+    email: EmailStr
+    cpf: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ClientListResponse(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    cpf: str
+
+    model_config = ConfigDict(from_attributes=True)
