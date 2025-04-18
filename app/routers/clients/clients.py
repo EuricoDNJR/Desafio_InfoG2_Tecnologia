@@ -129,3 +129,36 @@ async def list_clients(
     except Exception as e:
         logging.error(f"Error listing clients: {e}")
         raise HTTPException(status_code=400, detail="Erro ao listar clientes")
+
+
+@router.get(
+    "/{client_id}",
+    response_model=ClientListResponse,
+    dependencies=[Depends(get_token_header)],
+)
+async def get_client_by_id(
+    client_id: int,
+    jwt_token: str = Header(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Get client by ID
+    """
+    try:
+        logging.info("Decoding firebase JWT token")
+        decoded_token = auth.verify_id_token(jwt_token)
+
+        logging.info(f"Fetching client with ID {client_id} from database")
+        client = crud.get_client_by_id(db=db, client_id=client_id)
+
+        if not client:
+            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+        return client
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except Exception as e:
+        logging.error(f"Error fetching client: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao buscar cliente")
