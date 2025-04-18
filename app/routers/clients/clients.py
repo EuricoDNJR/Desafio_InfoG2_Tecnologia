@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from firebase_admin import auth
 
 from ...dependencies import get_db, get_token_header
-from ...db.schemas.clients import ClientSchema, ClientListResponse
+from ...db.schemas.clients import ClientSchema, ClientListResponse, ClientUpdateSchema
 from ...utils.helper import firebase, logging
 from ...db.crud import client as crud
 
@@ -162,3 +162,99 @@ async def get_client_by_id(
     except Exception as e:
         logging.error(f"Error fetching client: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Erro ao buscar cliente")
+
+
+@router.put(
+    "/{client_id}",
+    dependencies=[Depends(get_token_header)],
+)
+async def update_client(
+    client_id: int,
+    client_data: ClientUpdateSchema,
+    jwt_token: str = Header(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Update client by ID
+    E.g:
+
+        {
+            "name": "Joãozin",
+            "email": "joazinreload@gmail.com",
+            "cpf": "12345678901",
+        }
+    """
+
+    try:
+        logging.info("Decoding Firebase JWT token")
+        decoded_token = auth.verify_id_token(jwt_token)
+
+        client = crud.get_client_by_id(db=db, client_id=client_id)
+        if not client:
+            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+        updated_client = crud.update_client(
+            db=db,
+            client=client,
+            name=client_data.name,
+            email=client_data.email,
+            cpf=client_data.cpf,
+        )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Cliente atualizado com sucesso",
+                "id": updated_client.id,
+            },
+        )
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Email ou CPF já cadastrado")
+
+    except Exception as e:
+        logging.error(f"Erro ao atualizar cliente: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao atualizar cliente")
+
+
+@router.delete(
+    "/{client_id}",
+    dependencies=[Depends(get_token_header)],
+)
+async def delete_client(
+    client_id: int,
+    jwt_token: str = Header(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete a client by ID.
+    """
+    try:
+        logging.info("Decoding Firebase JWT token")
+        decoded_token = auth.verify_id_token(jwt_token)
+        user_id = decoded_token.get("uid")
+
+        logging.info(f"User {user_id} requested deletion of client ID {client_id}")
+
+        client = crud.get_client_by_id(db=db, client_id=client_id)
+        if not client:
+            raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+        crud.delete_client(db=db, client=client)
+
+        logging.info(f"Client ID {client_id} deleted by user {user_id}")
+
+        return JSONResponse(
+            status_code=200,
+            content={"message": "Cliente excluído com sucesso"},
+        )
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except Exception as e:
+        logging.error(f"Erro ao excluir cliente: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao excluir cliente")
