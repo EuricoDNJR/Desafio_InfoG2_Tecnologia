@@ -45,3 +45,7 @@ def get_clients(
         query = query.filter(Client.email.ilike(f"%{email}%"))
 
     return query.offset(skip).limit(limit).all()
+
+
+def get_client_by_id(db: Session, client_id: int):
+    return db.query(Client).filter(Client.id == client_id).first()
