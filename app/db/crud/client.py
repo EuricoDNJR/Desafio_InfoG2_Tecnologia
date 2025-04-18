@@ -49,3 +49,21 @@ def get_clients(
 
 def get_client_by_id(db: Session, client_id: int):
     return db.query(Client).filter(Client.id == client_id).first()
+
+
+def update_client(db: Session, client, name=None, email=None, cpf=None):
+    if name:
+        client.name = name
+    if email:
+        client.email = email
+    if cpf:
+        client.cpf = cpf
+
+    db.commit()
+    db.refresh(client)
+    return client
+
+
+def delete_client(db: Session, client):
+    db.delete(client)
+    db.commit()
