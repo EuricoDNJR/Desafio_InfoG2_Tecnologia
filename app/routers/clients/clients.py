@@ -8,8 +8,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from firebase_admin import auth
 
-from app.db.schemas.clients import ClientOut
-
 from ...dependencies import get_db, get_token_header
 from ...db.schemas.clients import ClientSchema, ClientListResponse
 from ...utils.helper import firebase, logging

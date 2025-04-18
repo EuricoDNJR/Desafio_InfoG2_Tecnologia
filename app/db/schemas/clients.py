@@ -40,14 +40,14 @@ class ClientSchema(BaseModel):
         return v
 
 
-class ClientOut(BaseModel):
-    id: int
-    firebaseIdWhoCreated: str
-    name: str
-    email: EmailStr
-    cpf: str
+# class ClientOut(BaseModel):
+#     id: int
+#     firebaseIdWhoCreated: str
+#     name: str
+#     email: EmailStr
+#     cpf: str
 
-    model_config = ConfigDict(from_attributes=True)
+#     model_config = ConfigDict(from_attributes=True)
 
 
 class ClientListResponse(BaseModel):
