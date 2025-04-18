@@ -9,7 +9,7 @@ from firebase_admin import auth
 from ...dependencies import get_db, get_token_header
 from ...db.schemas.users import SignUpSchema, LoginSchema
 from ...utils.helper import firebase, logging
-from ...db import crud
+from ...db.crud import user as crud
 
 
 dotenv.load_dotenv()
@@ -66,17 +66,19 @@ async def create_an_account(
         logging.info("User inserted into database")
 
         return JSONResponse(
-            content={"message": f"User account created successfuly for user {user.id}"},
+            content={
+                "message": f"Conta de usuário criada com sucesso para o usuário {user.id}"
+            },
             status_code=201,
         )
     except auth.EmailAlreadyExistsError:
         raise HTTPException(
-            status_code=400, detail=f"Account already created for the email {email}"
+            status_code=400, detail=f"Conta já criada para o email {email}"
         )
 
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Error creating account for email {email} {e}"
+            status_code=400, detail=f"Erro ao criar conta para o email {email} {e}"
         )
 
 
@@ -113,7 +115,7 @@ async def create_access_token(user_data: LoginSchema):
         )
 
     except:
-        raise HTTPException(status_code=400, detail="Invalid Credentials")
+        raise HTTPException(status_code=400, detail="Credenciais inválidas")
 
 
 @router.post("/refresh-token/")
@@ -136,4 +138,4 @@ async def refresh_token(jwt_refresh_token: str = Header(...)):
 
     except Exception as e:
         logging.error(f"Error refreshing token: {e}")
-        raise HTTPException(status_code=400, detail=f"Error refreshing token: {e}")
+        raise HTTPException(status_code=400, detail=f"Erro ao atualizar o token: {e}")
