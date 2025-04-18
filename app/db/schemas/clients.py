@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 import re
 
@@ -57,3 +59,16 @@ class ClientListResponse(BaseModel):
     cpf: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ClientUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    cpf: Optional[str] = None
+
+    @field_validator("cpf")
+    @classmethod
+    def validate_cpf(cls, v):
+        if v and not is_valid_cpf(v):
+            raise ValueError("CPF inválido")
+        return v
