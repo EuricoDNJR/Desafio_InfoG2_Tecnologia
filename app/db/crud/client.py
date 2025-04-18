@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -25,3 +27,21 @@ def create_client(
     except IntegrityError:
         db.rollback()
         raise ValueError("Cliente já existe.")
+
+
+def get_clients(
+    db: Session,
+    name: Optional[str] = None,
+    email: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 10,
+):
+    query = db.query(Client)
+
+    if name:
+        query = query.filter(Client.name.ilike(f"%{name}%"))
+
+    if email:
+        query = query.filter(Client.email.ilike(f"%{email}%"))
+
+    return query.offset(skip).limit(limit).all()
