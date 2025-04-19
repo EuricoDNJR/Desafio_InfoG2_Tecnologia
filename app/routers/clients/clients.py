@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 import dotenv
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -207,6 +207,7 @@ async def update_client(
 
 @router.delete(
     "/{client_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(get_token_header)],
 )
 async def delete_client(
@@ -231,11 +232,7 @@ async def delete_client(
         crud.delete_client(db=db, client=client)
 
         logging.info(f"Client ID {client_id} deleted by user {user_id}")
-
-        return JSONResponse(
-            status_code=200,
-            content={"message": "Cliente excluído com sucesso"},
-        )
+        return
 
     except HTTPException as http_exc:
         raise http_exc
