@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 import re
@@ -57,6 +57,14 @@ class ClientListResponse(BaseModel):
     name: str
     email: EmailStr
     cpf: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ClientListPaginatedResponse(BaseModel):
+    page: int
+    limit: int
+    clients: List[ClientListResponse]
 
     model_config = ConfigDict(from_attributes=True)
 
