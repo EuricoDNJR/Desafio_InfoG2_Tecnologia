@@ -140,3 +140,45 @@ def get_orders(
         )
 
     return results
+
+
+def get_order_by_id(db: Session, order_id: int):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+
+    # Busca os itens do pedido, já unindo com o produto para obter dados adicionais
+    items = (
+        db.query(OrderItem)
+        .join(Product, Product.id == OrderItem.product_id)
+        .filter(OrderItem.order_id == order_id)
+        .with_entities(
+            OrderItem.product_id,
+            OrderItem.quantity,
+            Product.price,
+            Product.description,
+            Product.section,
+        )
+        .all()
+    )
+
+    # Estrutura os itens para se adequar ao schema de resposta
+    order_dict = {
+        "id": order.id,
+        "client_id": order.client_id,
+        "status": order.status,
+        "created_at": order.created_at,
+        "total_value": order.total_value,
+        "items": [
+            {
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "price": item.price,
+                "description": item.description,
+                "section": item.section,
+            }
+            for item in items
+        ],
+    }
+
+    return order_dict
