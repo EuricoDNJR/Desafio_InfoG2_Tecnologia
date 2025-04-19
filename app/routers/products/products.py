@@ -1,4 +1,6 @@
 import os
+from decimal import Decimal
+from typing import Optional
 
 import dotenv
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
@@ -7,7 +9,11 @@ from sqlalchemy.orm import Session
 from firebase_admin import auth
 
 from ...dependencies import get_db, get_token_header
-from ...db.schemas.products import ProductCreateSchema
+from ...db.schemas.products import (
+    ProductCreateSchema,
+    ProductListResponse,
+    ProductListPaginatedResponse,
+)
 from ...utils.helper import firebase, logging
 from ...db.crud import product as crud
 
@@ -72,3 +78,65 @@ async def create_product(
     except Exception as e:
         logging.error(f"Error creating product: {e}")
         raise HTTPException(status_code=400, detail="Erro ao criar o produto")
+
+
+@router.get(
+    "/",
+    response_model=ProductListPaginatedResponse,
+    dependencies=[Depends(get_token_header)],
+)
+async def list_products(
+    jwt_token: str = Header(...),
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1),
+    section: Optional[str] = Query(None),
+    available: Optional[bool] = Query(None),
+    min_price: Optional[Decimal] = Query(None),
+    max_price: Optional[Decimal] = Query(None),
+):
+    """
+    List products with pagination and filters.
+    E.g:
+
+        {
+            "page": 1,
+            "limit": 10,
+            "section": "Seção A",
+            "available": true,
+            "min_price": 50.00,
+            "max_price": 100.00
+        }
+
+    """
+    try:
+        logging.info("Decoding firebase JWT token")
+        decoded_token = {"uid": jwt_token}
+
+        if TEST != "ON":
+            decoded_token = auth.verify_id_token(jwt_token)
+        elif jwt_token != "test":
+            raise auth.InvalidIdTokenError("Invalid JWT token")
+
+        skip = (page - 1) * limit
+
+        logging.info("Fetching products from database")
+        products = crud.get_products(
+            db=db,
+            skip=skip,
+            limit=limit,
+            section=section,
+            available=available,
+            min_price=min_price,
+            max_price=max_price,
+        )
+
+        return {
+            "page": page,
+            "limit": limit,
+            "products": products,
+        }
+
+    except Exception as e:
+        logging.error(f"Error listing products: {e}")
+        raise HTTPException(status_code=400, detail="Erro ao listar produtos")
