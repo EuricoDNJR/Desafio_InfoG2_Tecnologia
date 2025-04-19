@@ -86,7 +86,6 @@ async def create_product(
     dependencies=[Depends(get_token_header)],
 )
 async def list_products(
-    jwt_token: str = Header(...),
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1),
@@ -110,13 +109,6 @@ async def list_products(
 
     """
     try:
-        logging.info("Decoding firebase JWT token")
-        decoded_token = {"uid": jwt_token}
-
-        if TEST != "ON":
-            decoded_token = auth.verify_id_token(jwt_token)
-        elif jwt_token != "test":
-            raise auth.InvalidIdTokenError("Invalid JWT token")
 
         skip = (page - 1) * limit
 
@@ -140,3 +132,33 @@ async def list_products(
     except Exception as e:
         logging.error(f"Error listing products: {e}")
         raise HTTPException(status_code=400, detail="Erro ao listar produtos")
+
+
+@router.get(
+    "/{product_id}",
+    response_model=ProductListResponse,
+    dependencies=[Depends(get_token_header)],
+)
+async def get_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Get product by ID.
+    """
+    try:
+        logging.info(f"Fetching product with ID {product_id} from database")
+
+        product = crud.get_product_by_id(db=db, product_id=product_id)
+
+        if not product:
+            raise HTTPException(status_code=404, detail="Produto não encontrado")
+
+        return product
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except Exception as e:
+        logging.error(f"Error fetching product: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao buscar produto")
