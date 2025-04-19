@@ -257,3 +257,20 @@ def update_order(db: Session, order_id: int, data: OrderUpdateRequest):
             for item in order_items
         ],
     }
+
+
+def delete_order(db: Session, order_id: int):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        return None
+
+    # Repor o estoque dos itens do pedido
+    for item in order.items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product:
+            product.stock += item.quantity
+        db.delete(item)
+
+    db.delete(order)
+    db.commit()
+    return order
