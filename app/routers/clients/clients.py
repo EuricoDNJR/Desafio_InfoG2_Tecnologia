@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import Optional
 
 import dotenv
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
@@ -9,7 +9,12 @@ from sqlalchemy.exc import IntegrityError
 from firebase_admin import auth
 
 from ...dependencies import get_db, get_token_header
-from ...db.schemas.clients import ClientSchema, ClientListResponse, ClientUpdateSchema
+from ...db.schemas.clients import (
+    ClientSchema,
+    ClientListResponse,
+    ClientUpdateSchema,
+    ClientListPaginatedResponse,
+)
 from ...utils.helper import firebase, logging
 from ...db.crud import client as crud
 
@@ -44,12 +49,6 @@ async def create_an_client(
         logging.info("Decoding firebase JWT token")
         decoded_token = {"uid": jwt_token}
 
-        if TEST != "ON":
-            decoded_token = auth.verify_id_token(jwt_token)
-
-        elif jwt_token != "test":
-            raise auth.InvalidIdTokenError("Invalid JWT token")
-
         logging.info(f"Firebase JWT Token decoded")
 
         logging.info("Inserting client into database")
@@ -77,16 +76,15 @@ async def create_an_client(
 
 @router.get(
     "/",
-    response_model=List[ClientListResponse],
+    response_model=ClientListPaginatedResponse,
     dependencies=[Depends(get_token_header)],
 )
 async def list_clients(
-    jwt_token: str = Header(...),
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1),
-    name: str = Query(None),
-    email: str = Query(None),
+    name: Optional[str] = Query(None),
+    email: Optional[str] = Query(None),
 ):
     """
     List clients with pagination and filter.
@@ -96,25 +94,13 @@ async def list_clients(
             "page": 1,
             "limit": 10,
             "name": "João",
-            "email": "joaocesar2@gmail.com"
+            "email": "",
         }
+
     """
-    logging.info("Listing clients")
     try:
 
-        logging.info("Decoding firebase JWT token")
-        decoded_token = {"uid": jwt_token}
-
-        if TEST != "ON":
-            decoded_token = auth.verify_id_token(jwt_token)
-
-        elif jwt_token != "test":
-            raise auth.InvalidIdTokenError("Invalid JWT token")
-
-        logging.info(f"Firebase JWT Token decoded")
-
-        skip = (page - 1) * limit  # Pular os registros já retornados
-
+        skip = (page - 1) * limit
         logging.info("Fetching clients from database")
         clients = crud.get_clients(
             db=db,
@@ -124,7 +110,11 @@ async def list_clients(
             email=email,
         )
 
-        return clients
+        return {
+            "page": page,
+            "limit": limit,
+            "clients": clients,
+        }
 
     except Exception as e:
         logging.error(f"Error listing clients: {e}")
@@ -138,15 +128,12 @@ async def list_clients(
 )
 async def get_client_by_id(
     client_id: int,
-    jwt_token: str = Header(...),
     db: Session = Depends(get_db),
 ):
     """
     Get client by ID
     """
     try:
-        logging.info("Decoding firebase JWT token")
-        decoded_token = auth.verify_id_token(jwt_token)
 
         logging.info(f"Fetching client with ID {client_id} from database")
         client = crud.get_client_by_id(db=db, client_id=client_id)
@@ -186,8 +173,6 @@ async def update_client(
     """
 
     try:
-        logging.info("Decoding Firebase JWT token")
-        decoded_token = auth.verify_id_token(jwt_token)
 
         client = crud.get_client_by_id(db=db, client_id=client_id)
         if not client:
