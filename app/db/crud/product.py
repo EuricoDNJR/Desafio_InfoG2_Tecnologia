@@ -1,6 +1,8 @@
 from typing import Optional
 
 from sqlalchemy.orm import Session
+from datetime import datetime
+
 from app.db.models.product import Product
 
 
@@ -59,3 +61,36 @@ def get_products(
 
 def get_product_by_id(db: Session, product_id: int):
     return db.query(Product).filter(Product.id == product_id).first()
+
+
+def update_product(
+    db: Session,
+    product,
+    description: Optional[str] = None,
+    price: Optional[float] = None,
+    section: Optional[str] = None,
+    available: Optional[bool] = None,
+    expiration_date: Optional[str] = None,
+    barcode: Optional[str] = None,
+):
+    if description is not None:
+        product.description = description
+    if price is not None:
+        product.price = price
+    if section is not None:
+        product.section = section
+    if available is not None:
+        product.available = available
+    if expiration_date is not None:
+        try:
+            product.expiration_date = datetime.strptime(
+                expiration_date, "%d/%m/%Y"
+            ).date()
+        except ValueError:
+            raise ValueError("Data de expiração inválida. Use o formato dd/mm/aaaa.")
+    if barcode:
+        product.barcode = barcode
+
+    db.commit()
+    db.refresh(product)
+    return product
