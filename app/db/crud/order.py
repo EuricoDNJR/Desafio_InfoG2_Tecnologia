@@ -3,7 +3,12 @@ from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 from app.db.models.product import Product
 from app.db.models.order import Order, OrderItem
-from app.db.schemas.orders import OrderCreateRequest, OrderItemResponse, OrderResponse
+from app.db.schemas.orders import (
+    OrderCreateRequest,
+    OrderItemResponse,
+    OrderResponse,
+    OrderUpdateRequest,
+)
 from datetime import datetime, timezone
 from typing import Optional, List
 
@@ -182,3 +187,73 @@ def get_order_by_id(db: Session, order_id: int):
     }
 
     return order_dict
+
+
+def update_order(db: Session, order_id: int, data: OrderUpdateRequest):
+    order = db.query(Order).filter(Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+
+    # Se houver itens para atualizar
+    if data.items is not None:
+        # Repor o estoque dos itens antigos
+        for item in order.items:
+            product = db.query(Product).filter(Product.id == item.product_id).first()
+            if product:
+                product.stock += item.quantity
+            db.delete(item)
+
+        # Adicionar os novos itens
+        total_value = 0
+        for item in data.items:
+            product = db.query(Product).filter(Product.id == item.product_id).first()
+            if not product:
+                raise HTTPException(
+                    status_code=404, detail=f"Produto {item.product_id} não encontrado"
+                )
+            if product.stock < item.quantity:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Estoque insuficiente para o produto {product.description}",
+                )
+
+            new_item = OrderItem(
+                order_id=order.id, product_id=item.product_id, quantity=item.quantity
+            )
+            db.add(new_item)
+            product.stock -= item.quantity
+            total_value += product.price * item.quantity
+
+        order.total_value = total_value
+
+    # Atualiza client_id e status se forem fornecidos
+    if data.client_id is not None:
+        order.client_id = data.client_id
+
+    if data.status is not None:
+        order.status = data.status
+
+    db.commit()
+    db.refresh(order)
+
+    # Recupera os dados atualizados com itens
+    order_items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+
+    return {
+        "id": order.id,
+        "client_id": order.client_id,
+        "status": order.status,
+        "created_at": order.created_at,
+        "total_value": order.total_value,
+        "items": [
+            {
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "price": item.product.price,
+                "description": item.product.description,
+                "section": item.product.section,
+            }
+            for item in order_items
+        ],
+    }
