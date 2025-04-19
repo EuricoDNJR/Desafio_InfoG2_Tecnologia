@@ -1,4 +1,10 @@
-from pydantic import BaseModel, ConfigDict, field_validator, field_serializer
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    field_validator,
+    field_serializer,
+    model_validator,
+)
 from datetime import datetime
 from typing import List, Optional
 from decimal import Decimal
@@ -28,7 +34,7 @@ class ProductCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ProductListResponse(BaseModel):
+class ProductResponse(BaseModel):
     id: int
     description: str
     price: Decimal
@@ -44,4 +50,17 @@ class ProductListResponse(BaseModel):
 class ProductListPaginatedResponse(BaseModel):
     page: int
     limit: int
-    products: List[ProductListResponse]
+    products: List[ProductResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProductUpdateRequest(BaseModel):
+    description: Optional[str] = None
+    price: Optional[float] = None
+    barcode: Optional[str] = None
+    section: Optional[str] = None
+    available: Optional[bool] = None
+    expiration_date: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
