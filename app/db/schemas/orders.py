@@ -32,3 +32,9 @@ class OrderResponse(BaseModel):
     items: List[OrderItemResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PaginatedOrderResponse(BaseModel):
+    page: int
+    limit: int
+    orders: List[OrderResponse]
