@@ -181,3 +181,30 @@ async def update_order(
     except Exception as e:
         logging.error(f"Erro ao atualizar pedido: {e}")
         raise HTTPException(status_code=400, detail="Erro ao atualizar pedido")
+
+
+@router.delete(
+    "/{order_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_token_header)],
+)
+async def delete_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Exclui um pedido específico.
+    """
+    try:
+        logging.info(f"Deleting order with ID {order_id}")
+        deleted_order = crud.delete_order(db=db, order_id=order_id)
+        if not deleted_order:
+            raise HTTPException(status_code=404, detail="Pedido não encontrado")
+        return
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except Exception as e:
+        logging.error(f"Erro ao excluir pedido: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao excluir pedido")
