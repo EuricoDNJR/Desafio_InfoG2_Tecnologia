@@ -55,3 +55,7 @@ def get_products(
         query = query.filter(Product.stock <= 0)
 
     return query.offset(skip).limit(limit).all()
+
+
+def get_product_by_id(db: Session, product_id: int):
+    return db.query(Product).filter(Product.id == product_id).first()
