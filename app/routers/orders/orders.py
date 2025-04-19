@@ -119,3 +119,25 @@ def list_orders(
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail="Erro ao listar pedidos")
+
+
+@router.get(
+    "/{order_id}",
+    response_model=OrderResponse,
+    dependencies=[Depends(get_token_header)],
+)
+async def get_order(order_id: int, db: Session = Depends(get_db)):
+    """
+    Retorna os detalhes de um pedido específico.
+    """
+    try:
+        logging.info(f"Fetching order {order_id}")
+        order = crud.get_order_by_id(db, order_id)
+        return order
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        logging.error(f"Erro ao buscar pedido {order_id}: {e}")
+        raise HTTPException(status_code=400, detail="Erro ao buscar pedido")
