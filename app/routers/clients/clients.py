@@ -61,7 +61,7 @@ async def create_an_client(
         )
 
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_201_CREATED,
             content={"message": "Cliente criado com sucesso", "id": client.id},
         )
 

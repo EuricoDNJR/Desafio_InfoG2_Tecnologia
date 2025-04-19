@@ -1,7 +1,7 @@
 import os
 
 import dotenv
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from firebase_admin import auth
@@ -69,7 +69,7 @@ async def create_an_account(
             content={
                 "message": f"Conta de usuário criada com sucesso para o usuário {user.id}"
             },
-            status_code=201,
+            status_code=status.HTTP_201_CREATED,
         )
     except auth.EmailAlreadyExistsError:
         raise HTTPException(
