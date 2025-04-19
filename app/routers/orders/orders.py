@@ -13,6 +13,7 @@ from ...db.schemas.orders import (
     OrderCreateRequest,
     OrderResponse,
     PaginatedOrderResponse,
+    OrderUpdateRequest,
 )
 from ...utils.helper import firebase, logging
 from ...db.crud import order as crud
@@ -141,3 +142,42 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         logging.error(f"Erro ao buscar pedido {order_id}: {e}")
         raise HTTPException(status_code=400, detail="Erro ao buscar pedido")
+
+
+@router.put(
+    "/{order_id}",
+    response_model=OrderResponse,
+    dependencies=[Depends(get_token_header)],
+)
+async def update_order(
+    order_id: int, data: OrderUpdateRequest, db: Session = Depends(get_db)
+):
+    """
+    Atualiza informações de um pedido, incluindo itens, cliente e status.
+
+    E.g:
+
+            {
+                "client_id": 1,
+                "status": "concluido",
+                "items": [
+                    {
+                        "product_id": 1,
+                        "quantity": 2
+                    },
+                    {
+                        "product_id": 2,
+                        "quantity": 1
+                    }
+                ]
+            }
+
+    """
+    try:
+        updated_order = crud.update_order(db, order_id, data)
+        return updated_order
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logging.error(f"Erro ao atualizar pedido: {e}")
+        raise HTTPException(status_code=400, detail="Erro ao atualizar pedido")
