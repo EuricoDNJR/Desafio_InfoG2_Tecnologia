@@ -11,8 +11,9 @@ from firebase_admin import auth
 from ...dependencies import get_db, get_token_header
 from ...db.schemas.products import (
     ProductCreateSchema,
-    ProductListResponse,
     ProductListPaginatedResponse,
+    ProductUpdateRequest,
+    ProductResponse,
 )
 from ...utils.helper import firebase, logging
 from ...db.crud import product as crud
@@ -136,7 +137,7 @@ async def list_products(
 
 @router.get(
     "/{product_id}",
-    response_model=ProductListResponse,
+    response_model=ProductResponse,
     dependencies=[Depends(get_token_header)],
 )
 async def get_product(
@@ -162,3 +163,59 @@ async def get_product(
     except Exception as e:
         logging.error(f"Error fetching product: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Erro ao buscar produto")
+
+
+@router.put(
+    "/{product_id}",
+    response_model=ProductResponse,
+    dependencies=[Depends(get_token_header)],
+)
+async def update_product(
+    product_id: int,
+    product_data: ProductUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Atualiza um produto específico.
+
+    E.g:
+
+        {
+            "description": "eu mudei denovo",
+            "price": 55.50,
+            "barcode": "1111111111",
+            "section": "mudada",
+            "available": true,
+            "expiration_date": "10/11/2027"
+        }
+
+    """
+    try:
+        logging.info(f"Updating product with ID {product_id}")
+        product = crud.get_product_by_id(db=db, product_id=product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Produto não encontrado")
+
+        updated_product = crud.update_product(
+            db=db,
+            product=product,
+            description=product_data.description,
+            price=product_data.price,
+            section=product_data.section,
+            available=product_data.available,
+            expiration_date=product_data.expiration_date,
+            barcode=product_data.barcode,
+        )
+
+        return updated_product
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except ValueError as ve:
+        logging.error(f"Validation error: {ve}", exc_info=True)
+        raise HTTPException(status_code=422, detail=str(ve))
+
+    except Exception as e:
+        logging.error(f"Error updating product: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao atualizar produto")
