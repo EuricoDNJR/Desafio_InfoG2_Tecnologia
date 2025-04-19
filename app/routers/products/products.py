@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Optional
 
 import dotenv
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from firebase_admin import auth
@@ -219,3 +219,30 @@ async def update_product(
     except Exception as e:
         logging.error(f"Error updating product: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Erro ao atualizar produto")
+
+
+@router.delete(
+    "/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_token_header)],
+)
+async def delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Exclui um produto específico.
+    """
+    try:
+        logging.info(f"Deleting product with ID {product_id}")
+        deleted_product = crud.delete_product(db=db, product_id=product_id)
+        if not deleted_product:
+            raise HTTPException(status_code=404, detail="Produto não encontrado")
+        return
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except Exception as e:
+        logging.error(f"Error deleting product: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Erro ao excluir produto")
