@@ -31,16 +31,15 @@ def create_client(
 
 def get_clients(
     db: Session,
-    name: Optional[str] = None,
-    email: Optional[str] = None,
     skip: int = 0,
     limit: int = 10,
+    name: Optional[str] = None,
+    email: Optional[str] = None,
 ):
     query = db.query(Client)
 
     if name:
         query = query.filter(Client.name.ilike(f"%{name}%"))
-
     if email:
         query = query.filter(Client.email.ilike(f"%{email}%"))
 

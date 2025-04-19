@@ -7,9 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.database import engine
 from app.db.base import Base
-from app.db.models import user, client
+from app.db.models import user, client, product
 from .routers.auth import auth
 from .routers.clients import clients
+from .routers.products import products
 from .utils.helper import logging
 
 
@@ -66,6 +67,13 @@ app.include_router(
     clients.router,
     prefix=f"/clients",
     tags=["clients"],
+    responses=response_404,
+)
+
+app.include_router(
+    products.router,
+    prefix=f"/products",
+    tags=["products"],
     responses=response_404,
 )
 
