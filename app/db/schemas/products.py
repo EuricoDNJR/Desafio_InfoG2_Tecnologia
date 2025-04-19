@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, field_serializer
 from datetime import datetime
 from typing import List, Optional
 from decimal import Decimal
@@ -26,3 +26,22 @@ class ProductCreateSchema(BaseModel):
             raise ValueError("A data de validade deve estar no formato dd-mm-aaaa")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ProductListResponse(BaseModel):
+    id: int
+    description: str
+    price: Decimal
+    barcode: str
+    section: str
+    stock: int
+    expiration_date: Optional[date] = None
+    images: Optional[List[str]] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProductListPaginatedResponse(BaseModel):
+    page: int
+    limit: int
+    products: List[ProductListResponse]
