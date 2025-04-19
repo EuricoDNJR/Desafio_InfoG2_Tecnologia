@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List
+from typing import List, Optional, Literal
 from datetime import datetime
 
 
@@ -38,3 +38,14 @@ class PaginatedOrderResponse(BaseModel):
     page: int
     limit: int
     orders: List[OrderResponse]
+
+
+class OrderItemUpdate(BaseModel):
+    product_id: int
+    quantity: int
+
+
+class OrderUpdateRequest(BaseModel):
+    client_id: Optional[int] = None
+    status: Optional[Literal["pendente", "concluido", "cancelado"]] = None
+    items: Optional[List[OrderItemUpdate]] = None
