@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-
+from sqlalchemy.orm import relationship
 from app.db.base import Base
 
 
@@ -11,3 +11,4 @@ class Client(Base):
     name = Column(String, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     cpf = Column(String, unique=True, index=True, nullable=False)
+    orders = relationship("Order", back_populates="client")

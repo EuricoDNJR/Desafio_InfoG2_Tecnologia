@@ -72,7 +72,7 @@ async def create_product(
         )
 
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_201_CREATED,
             content={"message": "Produto criado com sucesso", "id": product.id},
         )
 
