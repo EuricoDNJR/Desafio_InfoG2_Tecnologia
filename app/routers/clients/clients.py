@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from firebase_admin import auth
 
-from ...dependencies import get_db, get_token_header
+from ...dependencies import get_db, get_token_header, get_current_user_with_role
 from ...db.schemas.clients import (
     ClientSchema,
     ClientListResponse,
@@ -208,7 +208,7 @@ async def update_client(
 @router.delete(
     "/{client_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(get_token_header)],
+    dependencies=[Depends(get_current_user_with_role("admin"))],
 )
 async def delete_client(
     client_id: int,
