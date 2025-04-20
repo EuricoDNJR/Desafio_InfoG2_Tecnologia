@@ -27,3 +27,7 @@ def create_user(
     except IntegrityError:
         db.rollback()
         raise ValueError("Usuário já existe.")
+
+
+def get_user_by_firebase_id(db: Session, firebaseId: str):
+    return db.query(User).filter(User.firebaseId == firebaseId).first()
