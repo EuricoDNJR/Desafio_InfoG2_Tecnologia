@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_SERVER: str
     POSTGRES_PORT: str
+    TEST_DB_URL: str
 
     FIREBASE_API_KEY: str
     FIREBASE_AUTH_DOMAIN: str
