@@ -29,7 +29,6 @@ def test_create_client_success(client, valid_client_data, fake_jwt_token, db):
     )
 
     assert response.status_code == 201
-    assert response.json()["message"] == "Cliente criado com sucesso"
     assert "id" in response.json()
 
     client_in_db = (
@@ -185,7 +184,6 @@ def test_update_client_success(client, db, fake_jwt_token):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["message"] == "Cliente atualizado com sucesso"
     assert data["id"] == client_obj.id
 
     # Verifica no banco

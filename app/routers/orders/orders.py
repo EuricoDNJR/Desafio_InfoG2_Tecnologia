@@ -26,7 +26,10 @@ router = APIRouter()
 
 
 @router.post(
-    "/", response_model=OrderResponse, dependencies=[Depends(get_token_header)]
+    "/",
+    response_model=OrderResponse,
+    dependencies=[Depends(get_token_header)],
+    status_code=status.HTTP_201_CREATED,
 )
 def create_order(order_data: OrderCreateRequest, db: Session = Depends(get_db)):
     """
@@ -52,13 +55,7 @@ def create_order(order_data: OrderCreateRequest, db: Session = Depends(get_db)):
         logging.info(f"Creating order for client {order_data.client_id}")
         order = crud.create_order(db=db, order_data=order_data)
 
-        return JSONResponse(
-            status_code=status.HTTP_201_CREATED,
-            content={
-                "message": "Pedido criado com sucesso",
-                "order_id": order.id,
-            },
-        )
+        return order
 
     except HTTPException as http_exc:
         raise http_exc

@@ -80,3 +80,12 @@ class ClientUpdateSchema(BaseModel):
         if v and not is_valid_cpf(v):
             raise ValueError("CPF inválido")
         return v
+
+
+class ClientCreateResponse(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    cpf: str
+
+    model_config = ConfigDict(from_attributes=True)
