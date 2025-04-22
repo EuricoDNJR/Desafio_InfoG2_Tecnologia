@@ -14,6 +14,7 @@ from ...db.schemas.clients import (
     ClientListResponse,
     ClientUpdateSchema,
     ClientListPaginatedResponse,
+    ClientCreateResponse,
 )
 from ...utils.helper import firebase, logging
 from ...db.crud import client as crud
@@ -25,7 +26,12 @@ TEST = os.getenv("TEST")
 router = APIRouter()
 
 
-@router.post("/", dependencies=[Depends(get_token_header)])
+@router.post(
+    "/",
+    response_model=ClientCreateResponse,
+    dependencies=[Depends(get_token_header)],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_an_client(
     client_data: ClientSchema,
     jwt_token: str = Header(...),
@@ -60,10 +66,7 @@ async def create_an_client(
             cpf=cpf,
         )
 
-        return JSONResponse(
-            status_code=status.HTTP_201_CREATED,
-            content={"message": "Cliente criado com sucesso", "id": client.id},
-        )
+        return client
 
     except Exception as e:
         logging.error(f"Error creating client: {e}")
@@ -153,6 +156,7 @@ async def get_client_by_id(
 
 @router.put(
     "/{client_id}",
+    response_model=ClientCreateResponse,
     dependencies=[Depends(get_token_header)],
 )
 async def update_client(
@@ -185,13 +189,7 @@ async def update_client(
             cpf=client_data.cpf,
         )
 
-        return JSONResponse(
-            status_code=200,
-            content={
-                "message": "Cliente atualizado com sucesso",
-                "id": updated_client.id,
-            },
-        )
+        return updated_client
 
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Email ou CPF já cadastrado")
