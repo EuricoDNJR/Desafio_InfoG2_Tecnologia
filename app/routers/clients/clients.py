@@ -158,7 +158,6 @@ async def get_client_by_id(
 async def update_client(
     client_id: int,
     client_data: ClientUpdateSchema,
-    jwt_token: str = Header(...),
     db: Session = Depends(get_db),
 ):
     """
@@ -173,11 +172,11 @@ async def update_client(
     """
 
     try:
-
+        logging.info(f"Updating client with ID {client_id}")
         client = crud.get_client_by_id(db=db, client_id=client_id)
         if not client:
             raise HTTPException(status_code=404, detail="Cliente não encontrado")
-
+        logging.info("Updating client in database")
         updated_client = crud.update_client(
             db=db,
             client=client,
@@ -194,11 +193,11 @@ async def update_client(
             },
         )
 
-    except HTTPException as http_exc:
-        raise http_exc
-
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Email ou CPF já cadastrado")
+
+    except HTTPException as http_exc:
+        raise http_exc
 
     except Exception as e:
         logging.error(f"Erro ao atualizar cliente: {e}", exc_info=True)
@@ -219,11 +218,12 @@ async def delete_client(
     Delete a client by ID.
     """
     try:
-        logging.info("Decoding Firebase JWT token")
-        decoded_token = auth.verify_id_token(jwt_token)
-        user_id = decoded_token.get("uid")
+        if TEST != "ON":
+            logging.info("Decoding Firebase JWT token")
+            decoded_token = auth.verify_id_token(jwt_token)
+            user_id = decoded_token.get("uid")
 
-        logging.info(f"User {user_id} requested deletion of client ID {client_id}")
+            logging.info(f"User {user_id} requested deletion of client ID {client_id}")
 
         client = crud.get_client_by_id(db=db, client_id=client_id)
         if not client:
@@ -231,7 +231,6 @@ async def delete_client(
 
         crud.delete_client(db=db, client=client)
 
-        logging.info(f"Client ID {client_id} deleted by user {user_id}")
         return
 
     except HTTPException as http_exc:

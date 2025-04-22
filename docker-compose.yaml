@@ -1,3 +1,4 @@
+
 services:
   db:
     image: postgres:15
@@ -11,6 +12,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  test_db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_db
+    ports:
+      - "5433:5432"  # Expõe a porta 5432 internamente no contêiner
+    volumes:
+      - pgdata_test:/var/lib/postgresql/data
+
   web:
     build: .
     container_name: fastapi_app
@@ -21,12 +34,15 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - test_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: lu_estilo
       POSTGRES_SERVER: db
       POSTGRES_PORT: 5432
+      TEST_DB_URL: postgresql://test_user:test_password@test_db:5432/test_db  # Atualizado para usar 'test_db'
 
 volumes:
   pgdata:
+  pgdata_test:

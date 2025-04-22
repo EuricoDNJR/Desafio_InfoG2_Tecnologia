@@ -2,7 +2,8 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-
+from psycopg2.errors import UniqueViolation
+from fastapi import HTTPException
 from app.db.models.client import Client
 
 
@@ -51,16 +52,26 @@ def get_client_by_id(db: Session, client_id: int):
 
 
 def update_client(db: Session, client, name=None, email=None, cpf=None):
-    if name:
-        client.name = name
-    if email:
-        client.email = email
-    if cpf:
-        client.cpf = cpf
+    try:
+        if name:
+            client.name = name
+        if email:
+            client.email = email
+        if cpf:
+            client.cpf = cpf
 
-    db.commit()
-    db.refresh(client)
-    return client
+        db.commit()
+        db.refresh(client)
+        return client
+
+    except UniqueViolation:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email ou CPF já cadastrados")
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400, detail="Erro de integridade no banco de dados"
+        )
 
 
 def delete_client(db: Session, client):

@@ -68,7 +68,7 @@ def create_order(order_data: OrderCreateRequest, db: Session = Depends(get_db)):
 
 
 @router.get(
-    "/orders",
+    "/",
     response_model=PaginatedOrderResponse,
     dependencies=[Depends(get_token_header)],
 )

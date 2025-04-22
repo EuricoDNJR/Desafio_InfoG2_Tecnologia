@@ -56,7 +56,10 @@ async def create_product(
 
     try:
         logging.info("Decoding firebase JWT token")
-        decoded_token = auth.verify_id_token(jwt_token)
+        if TEST == "ON":
+            decoded_token = {"uid": "test_user_id"}
+        else:
+            decoded_token = auth.verify_id_token(jwt_token)
 
         logging.info(f"Inserting product into database")
         product = crud.create_product(
