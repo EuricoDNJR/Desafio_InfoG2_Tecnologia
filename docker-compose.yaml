@@ -20,7 +20,7 @@ services:
       POSTGRES_PASSWORD: test_password
       POSTGRES_DB: test_db
     ports:
-      - "5433:5432"  # Expõe a porta 5432 internamente no contêiner
+      - "5433:5432"
     volumes:
       - pgdata_test:/var/lib/postgresql/data
 
