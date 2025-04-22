@@ -43,8 +43,8 @@ else:
         title=api_metadata["title"],
         description=api_metadata["description"],
         version=api_metadata["version"],
-        # docs_url=None,
-        # redoc_url=None,
+        docs_url=None,
+        redoc_url=None,
     )
 
 app.add_middleware(
