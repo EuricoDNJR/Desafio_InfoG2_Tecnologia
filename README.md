@@ -83,7 +83,13 @@ FIREBASE_CLIENT_CERT_URL=your_cert_url
 FIREBASE_UNIVERSE_DOMAIN=googleapis.com
 ```
 
-Onde TEST=ON significa que o jwt-token será sempre "test", e TEST=OFF significa que o jwt-token deverá ser o gerado por meio do Firebase. ENV=dev significa que o docs e o swagger estarão disponíveis, e ENV=prod significa que o docs e o swagger não estarão disponíveis.
+> ℹ️ **Explicações sobre as variáveis `TEST` e `ENV`:**
+>
+> - `TEST=ON`: A autenticação usará um token JWT fixo com o valor `"test"`, facilitando o uso durante os testes e o desenvolvimento local.
+> - `TEST=OFF`: A autenticação exigirá um token JWT válido gerado via Firebase.
+>
+> - `ENV=dev`: Ativa a documentação interativa da API (`/docs` e `/redoc`).
+> - `ENV=prod`: Desativa os endpoints de documentação.
 
 ### 🔧 Instalação de Dependências
 
