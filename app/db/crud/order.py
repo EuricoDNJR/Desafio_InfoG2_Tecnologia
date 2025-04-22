@@ -227,12 +227,23 @@ def update_order(db: Session, order_id: int, data: OrderUpdateRequest):
 
         order.total_value = total_value
 
-    # Atualiza client_id e status se forem fornecidos
+    # Atualiza client_id se fornecido
     if data.client_id is not None:
         order.client_id = data.client_id
 
+    # Atualiza status, incluindo lógica para cancelamento
     if data.status is not None:
-        order.status = data.status
+        if data.status == "cancelado" and order.status != "cancelado":
+            # Restabelece o estoque dos itens do pedido
+            for item in order.items:
+                product = (
+                    db.query(Product).filter(Product.id == item.product_id).first()
+                )
+                if product:
+                    product.stock += item.quantity
+            order.status = "cancelado"
+        else:
+            order.status = data.status
 
     db.commit()
     db.refresh(order)
