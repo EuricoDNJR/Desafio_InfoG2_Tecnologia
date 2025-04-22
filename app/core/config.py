@@ -7,11 +7,7 @@ class Settings(BaseSettings):
     TEST: str
     ENV: str
 
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    POSTGRES_SERVER: str
-    POSTGRES_PORT: str
+    DATABASE_URL: str
     TEST_DB_URL: str
 
     # Firebase Web SDK
