@@ -139,11 +139,10 @@ def test_create_order_success(
     )
 
     assert response.status_code == 201
-    assert response.json()["message"] == "Pedido criado com sucesso"
-    assert "order_id" in response.json()
+    assert "id" in response.json()
 
     # Verifica no banco
-    order = db.query(Order).filter_by(id=response.json()["order_id"]).first()
+    order = db.query(Order).filter_by(id=response.json()["id"]).first()
     assert order is not None
     assert order.client_id == create_test_client
     assert len(order.items) == 2
